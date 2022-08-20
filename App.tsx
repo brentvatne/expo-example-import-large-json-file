@@ -1,19 +1,29 @@
-import * as React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { TBeer } from './types';
-
-// @note: This crashes
-// const beers: TBeer[] = require('./assets/data/beers.json');
+import * as React from "react";
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View } from "react-native";
+import { TBeer } from "./types";
+import * as FileSystem from "expo-file-system";
+import { Asset } from "expo-asset";
 
 export default function App() {
   const [beers, setBeers] = React.useState<TBeer[]>([]);
 
-  // @note: This crashes
   React.useEffect(() => {
     try {
-      const beersRequired: TBeer[] = require('./assets/data/beers.json');
-      setBeers(beersRequired);
+      async function load() {
+        // Can't import json or it gets embedded in the bundle,
+        // import it as txt instead
+        const assetResult = await Asset.loadAsync(
+          require("~/assets/data/beers.txt")
+        );
+        const rawText = await FileSystem.readAsStringAsync(
+          assetResult[0].localUri || ""
+        );
+        const beersRequired = JSON.parse(rawText) as TBeer[];
+        setBeers(beersRequired);
+      }
+
+      load();
     } catch (error) {
       console.log(error);
     }
@@ -31,8 +41,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
